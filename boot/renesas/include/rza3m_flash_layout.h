@@ -17,7 +17,7 @@
 #endif
 
 /* ---------------- What the stock IPL does with "the application" ---------------- */
-#define RZA3M_MCUBOOT_DDR_BASE     RZA3M_U(0x40000000)  /* TODO: DDR address the IPL copies to AND jumps to */
+#define RZA3M_MCUBOOT_DDR_BASE     RZA3M_U(0x40001000)  /* TODO: DDR address the IPL copies to AND jumps to */
 #define RZA3M_MCUBOOT_DDR_SIZE     RZA3M_U(0x001F0000)  /* TODO: <2 MB for code+data+bss+stack              */
 
 /* ---------------- NOR device ---------------- */
