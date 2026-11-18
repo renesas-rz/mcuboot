@@ -1201,7 +1201,7 @@ static int spim_set_frequency(xspi_ctrl_t * const ctrl, int frequency_hz)
 	if (actual_freq == -1) return -1;
 	actual_freq = actual_freq / 4;
 	if (frequency_hz != actual_freq) {
-		INFO("SPIM: Reduces the SPI frequency from requested %d to %d.\n", frequency_hz, actual_freq);
+		/* INFO("SPIM: Reduces the SPI frequency from requested %d to %d.\n", frequency_hz, actual_freq); */
 	}
 	spi_clock = actual_freq;
 

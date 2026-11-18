@@ -2204,7 +2204,7 @@ boot_select_or_erase(struct boot_loader_state *state)
          * runtime or its trailer is corrupted/invalid. Erase the image
          * to prevent it from being selected again on the next reboot.
          */
-        BOOT_LOG_DBG("Erasing faulty image in the %s slot.",
+        BOOT_LOG_INF("Erasing faulty image in the %s slot.",
                      (active_slot == BOOT_SLOT_PRIMARY) ? "primary" : "secondary");
         rc = boot_scramble_region(fap, 0, flash_area_get_size(fap), false);
         assert(rc == 0);
