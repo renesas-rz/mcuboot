@@ -23,7 +23,7 @@ OPT_FLAGS := -Os -g
 endif
 
 PORT_SRCS := src/start.S src/rza3m_jump.S src/boot_main.c src/flash_map_backend.c \
-             src/rza3m_console.c src/rza3m_string.c src/rza3m_cache.c
+             src/rza3m_console.c src/rza3m_string.c src/rza3m_cache.c src/rza3m_wdt.c
 # All bootutil sources except the PSA crypto backends (*_psa.c): they need
 # mbedTLS/PSA headers and aren't disabled by mcuboot_config.h.
 # Add more files with BOOTUTIL_EXCLUDE="a.c b.c"

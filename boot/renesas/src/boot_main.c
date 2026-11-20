@@ -55,6 +55,11 @@ void rza3m_mcuboot_main(void)
     uintptr_t load;
     FIH_DECLARE(fih_rc, FIH_FAILURE);
 
+    /* Early in rza3m_mcuboot_main(), after rza3m_plat_init(): */
+    if (rza3m_wdt_caused_last_reset(true)) {
+        BOOT_LOG_INF("Previous reset: watchdog (trial image did not confirm in time)");
+    }
+
     if (rza3m_plat_init() != 0) {
         rza3m_halt("platform init failed");
     }
@@ -72,17 +77,17 @@ void rza3m_mcuboot_main(void)
     load = (uintptr_t)hdr->ih_load_addr;          /* copied and validated by bootutil */
 #else
     {
-        const struct flash_area *pfa;
-        uint32_t total = (uint32_t)hdr->ih_hdr_size + hdr->ih_img_size;
+        const struct flash_area *fa;
+        struct boot_swap_state st;
+        int id = flash_area_id_from_image_offset(rsp.br_image_off);
 
-        if (total > RZA3M_APP_RAM_SIZE) {
-            rza3m_halt("image larger than the DDR application region");
-        }
-        if ((flash_area_open(FLASH_AREA_IMAGE_PRIMARY(0), &pfa) != 0) ||
-            (flash_area_read(pfa, 0, (void *)(uintptr_t)RZA3M_APP_LOAD_ADDR, total) != 0)) {
-            rza3m_halt("copy of the primary slot to DDR failed");
-        }
-        flash_area_close(pfa);
+        if ((id >= 0) && (flash_area_open((uint8_t)id, &fa) == 0)) {
+            if ((boot_read_swap_state(fa, &st) == 0) && (st.image_ok != BOOT_FLAG_SET)) {
+                int rc = rza3m_wdt_start(RZA3M_WDT_PERIOD_MS);
+                BOOT_LOG_INF("Trial image: watchdog armed (%u ms x2), rc=%d",
+                             (unsigned int)RZA3M_WDT_PERIOD_MS, rc);
+            }
+        flash_area_close(fa);
         load = RZA3M_APP_LOAD_ADDR;
     }
 #endif
