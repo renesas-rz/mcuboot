@@ -8,7 +8,7 @@
 #define RZA3M_WDT_PERIOD_MS      5000U    /* reset ~10 s after jump if never refreshed */
 #endif
 
-/* Start WDT CH0. Returns 0 ok, 1 already running (unchanged), -1 not clocked. */
+/* Start WDT CH0. Returns 0 ok, 1 already running (unchanged), -1 on failure. */
 int  rza3m_wdt_start(uint32_t period_ms);
 bool rza3m_wdt_is_running(void);
 void rza3m_wdt_refresh(void);                 /* no-op if not running */

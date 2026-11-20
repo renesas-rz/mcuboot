@@ -14,6 +14,7 @@
 #include "flash_map_backend/flash_map_backend.h"
 #include "sysflash/sysflash.h"
 #include "rza3m_port.h"
+#include "rza3m_wdt.h"
 
 BOOT_LOG_MODULE_REGISTER(rza3m);
 
@@ -55,13 +56,12 @@ void rza3m_mcuboot_main(void)
     uintptr_t load;
     FIH_DECLARE(fih_rc, FIH_FAILURE);
 
-    /* Early in rza3m_mcuboot_main(), after rza3m_plat_init(): */
-    if (rza3m_wdt_caused_last_reset(true)) {
-        BOOT_LOG_INF("Previous reset: watchdog (trial image did not confirm in time)");
-    }
-
     if (rza3m_plat_init() != 0) {
         rza3m_halt("platform init failed");
+    }
+
+    if (rza3m_wdt_caused_last_reset(true)) {
+        BOOT_LOG_INF("Previous reset: watchdog");
     }
 
     BOOT_LOG_INF("RZ/A3M MCUboot - mode %s", RZA3M_MODE_NAME);
@@ -77,17 +77,17 @@ void rza3m_mcuboot_main(void)
     load = (uintptr_t)hdr->ih_load_addr;          /* copied and validated by bootutil */
 #else
     {
-        const struct flash_area *fa;
-        struct boot_swap_state st;
-        int id = flash_area_id_from_image_offset(rsp.br_image_off);
+        const struct flash_area *pfa;
+        uint32_t total = (uint32_t)hdr->ih_hdr_size + hdr->ih_img_size;
 
-        if ((id >= 0) && (flash_area_open((uint8_t)id, &fa) == 0)) {
-            if ((boot_read_swap_state(fa, &st) == 0) && (st.image_ok != BOOT_FLAG_SET)) {
-                int rc = rza3m_wdt_start(RZA3M_WDT_PERIOD_MS);
-                BOOT_LOG_INF("Trial image: watchdog armed (%u ms x2), rc=%d",
-                             (unsigned int)RZA3M_WDT_PERIOD_MS, rc);
-            }
-        flash_area_close(fa);
+        if (total > RZA3M_APP_RAM_SIZE) {
+            rza3m_halt("image larger than the DDR application region");
+        }
+        if ((flash_area_open(FLASH_AREA_IMAGE_PRIMARY(0), &pfa) != 0) ||
+            (flash_area_read(pfa, 0, (void *)(uintptr_t)RZA3M_APP_LOAD_ADDR, total) != 0)) {
+            rza3m_halt("copy of the primary slot to DDR failed");
+        }
+        flash_area_close(pfa);
         load = RZA3M_APP_LOAD_ADDR;
     }
 #endif
@@ -125,6 +125,38 @@ void rza3m_mcuboot_main(void)
     BOOT_LOG_INF("boot slot %c  v%u.%u.%u+%lu  ui_bank %ld  entry 0x%lx",
                  bi->running_slot ? 'B' : 'A', bi->ver_major, bi->ver_minor, bi->ver_revision,
                  (unsigned long)bi->ver_build, (long)(int32_t)bi->ui_bank_id, (unsigned long)entry);
+
+#if defined(MCUBOOT_RAM_LOAD_REVERT)
+    {
+        const struct flash_area *fa;
+        struct boot_swap_state st;
+        int id = flash_area_id_from_image_offset(rsp.br_image_off);
+
+        if ((id < 0) || (flash_area_open((uint8_t)id, &fa) != 0)) {
+            rza3m_halt("cannot open selected image trailer");
+        }
+        int rc = boot_read_swap_state(fa, &st);
+        flash_area_close(fa);
+        if (rc != 0) {
+            rza3m_halt("cannot read selected image trailer");
+        }
+        if (st.image_ok != BOOT_FLAG_SET) {
+            if (st.copy_done != BOOT_FLAG_SET) {
+                rza3m_halt("trial not recorded in image trailer");
+            }
+            rc = rza3m_wdt_start(RZA3M_WDT_PERIOD_MS);
+            if (rc < 0) {
+                rza3m_halt("cannot start trial watchdog");
+            }
+            if (rc == 0) {
+                BOOT_LOG_INF("Trial image: watchdog armed (%u ms x2)",
+                             (unsigned int)RZA3M_WDT_PERIOD_MS);
+            } else {
+                BOOT_LOG_INF("Trial image: watchdog already running");
+            }
+        }
+    }
+#endif
 
     rza3m_plat_console_flush();
     rza3m_disable_mmu_and_jump(entry);           /* does not return */

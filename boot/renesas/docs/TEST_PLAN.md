@@ -20,6 +20,16 @@ Log every run: MCUboot UART lines, `[APP]` lines, boot time (reset → `[APP]` b
 | T14 | both slots erased/corrupted | power on | `HALT: no bootable image` (FR-014) | same |
 | T15 | UI pairing | compare `ui_bank` log vs TLV | A → 0, B → 1 | bank follows image TLV, not slot |
 
+### RAM-load+revert watchdog checks
+
+- With `HEALTH_FORCE_FAIL`, press reset once to start a fresh trial. Check
+  that the inherited watchdog counter advances, the app does not confirm,
+  and the board reboots without another reset. The next boot should log
+  `Previous reset: watchdog`, erase the failed trial, and boot the confirmed slot.
+- With `APP_TEST_WATCHDOG_REFRESH`, check that the trial confirms and reports
+  20 seconds of watchdog refresh without rebooting. On the next boot the same
+  image should start as confirmed, without arming the trial watchdog.
+
 Measure per mode: MCUboot start → app banner time, swap duration for a full slot, erase cycles per
 update, MCUboot binary size and DDR footprint.
 

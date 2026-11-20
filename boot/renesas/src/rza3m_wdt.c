@@ -29,7 +29,7 @@
 #define WDTSET_WDTTIME_SHIFT 20U
 #define WDTSET_WDTTIME_MAX   0xFFFU
 
-/* ---- CPG (offsets: verify against the CPG register list, chapter 7.2.4) ---- */
+/* CPG offsets and masks match the R9A07G066M FSP device headers. */
 #define CPG_BASE             0x11010000UL
 #define CPG_WDTOVF_RST       (CPG_BASE + 0xB10U)
 #define CPG_WDTRST_SEL       (CPG_BASE + 0xB14U)
@@ -89,7 +89,7 @@ int rza3m_wdt_start(uint32_t period_ms)
     REG32(WDT_WDTINT) = WDTINT_INTDISP;             /* clear any stale state */
     wdt_delay_us(2U);                               /* WDTINT write interval */
     REG32(WDT_WDTCNT) = WDTCNT_WDTEN;
-    return 0;
+    return rza3m_wdt_is_running() ? 0 : -1;
 }
 
 void rza3m_wdt_refresh(void)

@@ -101,12 +101,29 @@ Do not add any other folder from `boot/renesas`. Only the paths above are meant 
 |---|---|
 | `MCUBOOT_APP_BUILD` | Builds the MCUboot sources in application mode |
 | `HEALTH_FORCE_FAIL` | **Test only.** Makes the example health check fail, to test revert. Do not define in normal builds. |
+| `APP_TEST_HANG` | **Test only.** Hangs an unconfirmed trial before confirmation to test watchdog recovery. |
+| `APP_TEST_WATCHDOG_REFRESH` | **Test only.** Logs once after 20 seconds of refreshing the inherited watchdog. |
+| `APP_REQUEST_TRIAL_ON_BOOT` | **Demo only.** Enables the startup request to trial the inactive slot and reboot. Leave it off for normal boots and watchdog tests. |
 
 Apply the same settings to every build configuration you use.
 
 ## 5.6 Application code
 
 The following extracts are from the example `src/hal_entry.c`.
+
+In RAM-load+revert mode, MCUboot starts the watchdog before handing off to an
+unconfirmed trial. Blinky does not reopen an inherited watchdog. It refreshes
+the watchdog from the main loop only after the health check and confirmation
+succeed. If either fails, Blinky stops without refreshing so MCUboot can roll
+back on the next boot. MCUboot does not arm the trial watchdog for a confirmed
+image.
+
+On RZ/A3M, FSP's `bsp_clock_off()` runs before `hal_entry()` and normally
+gates the WDT0 clocks. In Blinky's
+`rz/fsp/src/bsp/mcu/rza3m/bsp_clocks_setup.c`, skip that gate when the clock
+monitor is active and `WDTCNT.WDTEN` is set. Keep this adjustment when updating
+FSP. For a watchdog started by the application itself, continue to use
+`R_WDT_Open()` and `R_WDT_Refresh()`; do not reopen an inherited watchdog.
 
 ### Console output
 
