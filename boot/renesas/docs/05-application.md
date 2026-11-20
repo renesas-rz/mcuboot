@@ -211,7 +211,7 @@ Do not call `rza3m_app_is_confirmed()` right after `rza3m_app_confirm()`. The me
 
 | Function | Purpose |
 |---|---|
-| `rza3m_app_boot_info()` | Running slot, version, UI bank |
+| `rza3m_app_boot_info()` | Running slot and version |
 | `rza3m_app_is_confirmed()` | Whether the running image is confirmed |
 | `rza3m_app_confirm()` | Confirm the running image |
 | `rza3m_app_erase_inactive()` / `rza3m_app_write_inactive()` | Write an update into the other slot |

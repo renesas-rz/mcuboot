@@ -18,7 +18,7 @@ Log every run: MCUboot UART lines, `[APP]` lines, boot time (reset → `[APP]` b
 | T12 | power cut during swap, 20× random timing | | n/a | swap resumes/reverts, never unbootable (OR-002) |
 | T13 | reset while the app is writing slot B | | slot A boots (OR-001) | primary untouched |
 | T14 | both slots erased/corrupted | power on | `HALT: no bootable image` (FR-014) | same |
-| T15 | UI pairing | compare `ui_bank` log vs TLV | A → 0, B → 1 | bank follows image TLV, not slot |
+| T15 | Sign an image | inspect `imgtool dumpinfo` output | no custom UI-bank TLV | same |
 
 ### RAM-load+revert watchdog checks
 

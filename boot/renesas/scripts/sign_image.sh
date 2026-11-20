@@ -2,7 +2,7 @@
 # sign_image.sh - sign an RZ/A3M application image for MCUboot.
 #
 # usage:
-#   sign_image.sh <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <ui_bank> <out.bin> [slot_addr]
+#   sign_image.sh <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <out.bin> [slot_addr]
 #
 #   factory  --pad --confirm   permanent image; required for the first image in ram-load+revert
 #   test     --pad             trial boot
@@ -37,20 +37,19 @@ to_unix() { if command -v cygpath >/dev/null 2>&1; then cygpath -u "$1"; else pr
 # Unsigned little-endian 64-bit value at a byte offset.
 rd64() { od -An -tu8 -j "$2" -N8 "$1" | tr -d ' '; }
 
-[[ $# -eq 6 || $# -eq 7 ]] || usage
+[[ $# -eq 5 || $# -eq 6 ]] || usage
 
 MODE=$1
 KIND=$2
 IN=$(to_unix "$3")
 VER=$4
-UI=$5
-OUT=$(to_unix "$6")
-SLOT_ADDR=${7:-}
+OUT=$(to_unix "$5")
+SLOT_ADDR=${6:-}
 
 case "$MODE" in ramload|swap) ;; *) die "mode must be ramload or swap" ;; esac
 case "$KIND" in factory|test|raw) ;; *) die "kind must be factory, test or raw" ;; esac
-[[ "$UI"  =~ ^[0-9]+$ ]] || die "ui_bank must be a decimal number"
 [[ "$VER" =~ ^[0-9]+(\.[0-9]+){0,2}(\+[0-9]+)?$ ]] || die "version must look like 1.2.3 or 1.2.3+4"
+[[ -z "$SLOT_ADDR" || "$SLOT_ADDR" =~ ^(0[xX][[:xdigit:]]+|[0-9]+)$ ]] || die "slot_addr must be a NOR address"
 [[ -f "$IN" ]] || die "input not found: $IN"
 [[ "$(realpath "$IN")" != "$(realpath -m "$OUT")" ]] || die "input and output must differ"
 
@@ -113,8 +112,7 @@ ARGS=(sign
       --align "$ALIGN"
       --slot-size "$SLOT_SIZE"
       --max-sectors $((SLOT_SIZE / ERASE_SIZE))
-      --version "$VER"
-      --custom-tlv 0xA0 "$UI")
+      --version "$VER")
 
 if [[ "$MODE" == ramload ]]; then
     ARGS+=(--load-addr "$LOAD_ADDR")
@@ -130,7 +128,7 @@ case "$KIND" in
     raw)     ;;
 esac
 
-echo "[sign] $MODE/$KIND v$VER ui_bank=$UI -> $OUT"
+echo "[sign] $MODE/$KIND v$VER -> $OUT"
 "${PY[@]}" "$IMGTOOL" "${ARGS[@]}" "$PAYLOAD" "$OUT" || die "imgtool sign failed"
 
 "${PY[@]}" "$IMGTOOL" dumpinfo "$OUT" > "$WORK/dump.txt" || die "imgtool dumpinfo failed"

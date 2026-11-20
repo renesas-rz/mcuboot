@@ -9,7 +9,7 @@ Blinky_RZA3M.elf -> raw binary -> strip FSP loader header -> imgtool sign -> sig
 ## 6.1 Usage
 
 ```text
-sign_image.cmd <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <ui_bank> <out.bin>
+sign_image.cmd <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <out.bin>
 ```
 
 | Argument | Values |
@@ -17,7 +17,6 @@ sign_image.cmd <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <ui_b
 | mode | `ramload` (MCUboot `MODE=1`) |
 | kind | `factory` – confirmed image, use for the first image in slot A<br>`test` – trial image, must be confirmed by the application<br>`raw` – no trailer, for OTA payloads written by the application |
 | version | `1.0.0`, `1.0.1+5`, … must be higher than the running image |
-| ui_bank | `0` for slot A, `1` for slot B |
 | out.bin | Signed image to program into the slot |
 
 Environment variables:
@@ -38,10 +37,10 @@ set PYTHON=py -3.12
 cd <workspace>\Blinky_RZA3M
 
 rem first image, slot A
-%MCUBOOT_DIR%\boot\renesas\scripts\sign_image.cmd ramload factory Debug\Blinky_RZA3M.elf 1.0.0 0 Debug\Blinky_A.bin
+%MCUBOOT_DIR%\boot\renesas\scripts\sign_image.cmd ramload factory Debug\Blinky_RZA3M.elf 1.0.0 Debug\Blinky_A.bin
 
 rem update test image, slot B
-%MCUBOOT_DIR%\boot\renesas\scripts\sign_image.cmd ramload test Debug\Blinky_RZA3M.elf 1.0.1 1 Debug\Blinky_B.bin
+%MCUBOOT_DIR%\boot\renesas\scripts\sign_image.cmd ramload test Debug\Blinky_RZA3M.elf 1.0.1 Debug\Blinky_B.bin
 ```
 
 Expected end of the output:
@@ -65,6 +64,6 @@ Before programming a new test image, erase the whole target slot including its l
 Power-cycle and check the console:
 
 ```text
-[INF] boot slot A  v1.0.0+0  ui_bank 0  entry 0x40200000
+[INF] boot slot A  v1.0.0+0  entry 0x40200000
 Blinky started from MCUboot
 ```

@@ -4,19 +4,17 @@ rem sign_image.cmd - Windows equivalent of sign_image.sh
 rem Sign an RZ/A3M application image for MCUboot.
 rem
 rem usage:
-rem   sign_image.cmd ramload^|swap factory^|test^|raw IN.elf^|IN.bin VERSION UI_BANK OUT.bin [SLOT_ADDR]
+rem   sign_image.cmd ramload^|swap factory^|test^|raw IN.elf^|IN.bin VERSION OUT.bin
 rem
 rem   factory  --pad --confirm   permanent image; first image in ram-load+revert
 rem   test     --pad             trial boot
 rem   raw      no trailer        OTA payload; the app calls rza3m_app_mark_pending()
-rem   SLOT_ADDR (optional)       also write OUT.srec at this NOR address
-rem                              slot A = 0x20100000, slot B = 0x20200000
 rem
 rem Optional environment variables:
 rem   MCUBOOT_DIR   MCUboot repository (default: three folders above this script)
 rem   SIGNING_KEY   private key; only when MCUboot is built with MCUBOOT_SIGN_*
 rem   PYTHON        Python command (default: py -3, python, python3)
-rem   OBJCOPY       objcopy for .elf input / .srec output
+rem   OBJCOPY       objcopy for .elf input
 rem                 (default: aarch64-none-elf-objcopy on PATH)
 rem
 rem Layout values must match include/rza3m_flash_layout.h.
@@ -32,18 +30,16 @@ set /a ENTRY_ADDR=LOAD_ADDR + HDR_SIZE
 set /a MAX_SECTORS=SLOT_SIZE / ERASE_SIZE
 
 rem ---- arguments ------------------------------------------------------------
-if "%~6"=="" goto :usage
-if not "%~8"=="" goto :usage
+if "%~5"=="" goto :usage
+if not "%~6"=="" goto :usage
 
 set "MODE=%~1"
 set "KIND=%~2"
 set "IN=%~f3"
 set "IN_EXT=%~x3"
 set "VER=%~4"
-set "UI=%~5"
-set "OUT=%~f6"
-set "OUT_DIR=%~dp6"
-set "SLOT_ADDR=%~7"
+set "OUT=%~f5"
+set "OUT_DIR=%~dp5"
 
 if /i not "%MODE%"=="ramload" if /i not "%MODE%"=="swap" (
     echo [sign] ERROR: mode must be ramload or swap
@@ -58,10 +54,6 @@ if not defined KIND_ARGS (
     exit /b 2
 )
 
-echo %UI%| findstr /r "^[0-9][0-9]*$" >nul || (
-    echo [sign] ERROR: ui_bank must be a decimal number
-    exit /b 2
-)
 echo %VER%| findstr /r "^[0-9][0-9.+]*$" >nul || (
     echo [sign] ERROR: version must look like 1.2.3 or 1.2.3+4
     exit /b 2
@@ -135,8 +127,8 @@ if /i "%MODE%"=="ramload" set "LOAD_ARGS=--load-addr %LOAD_ADDR%"
 set "KEY_ARGS="
 if defined SIGNING_KEY set KEY_ARGS=--key "%SIGNING_KEY%"
 
-echo [sign] %MODE%/%KIND% v%VER% ui_bank=%UI% -^> %OUT%
-%PY% "%IMGTOOL%" sign --header-size %HDR_SIZE% --pad-header --align %ALIGN% --slot-size %SLOT_SIZE% --max-sectors %MAX_SECTORS% --version %VER% --custom-tlv 0xA0 %UI% %LOAD_ARGS% %KEY_ARGS% %KIND_ARGS% "%WORK%\payload.bin" "%OUT%"
+echo [sign] %MODE%/%KIND% v%VER% -^> %OUT%
+%PY% "%IMGTOOL%" sign --header-size %HDR_SIZE% --pad-header --align %ALIGN% --slot-size %SLOT_SIZE% --max-sectors %MAX_SECTORS% --version %VER% %LOAD_ARGS% %KEY_ARGS% %KIND_ARGS% "%WORK%\payload.bin" "%OUT%"
 if errorlevel 1 (
     echo [sign] ERROR: imgtool sign failed
     goto :fail
@@ -148,17 +140,6 @@ if errorlevel 1 (
     goto :fail
 )
 
-rem ---- 4. optional S-record --------------------------------------------------
-rem if "%SLOT_ADDR%"=="" goto :done
-rem set "SREC=%~dpn6.srec"
-rem "%OBJCOPY%" -I binary -O srec --srec-forceS3 --srec-len=32 --change-addresses=%SLOT_ADDR% "%OUT%" "%SREC%"
-rem if errorlevel 1 (
-rem     echo [sign] ERROR: S-record conversion failed
-rem     goto :fail
-rem )
-rem echo [sign] S-record: %SREC% (at %SLOT_ADDR%)
-
-:done
 rmdir /s /q "%WORK%" 2>nul
 echo [sign] SUCCESS
 exit /b 0
@@ -169,6 +150,5 @@ exit /b 1
 
 :usage
 echo usage:
-echo   sign_image.cmd ramload^|swap factory^|test^|raw IN.elf^|IN.bin VERSION UI_BANK OUT.bin [SLOT_ADDR]
-echo   slot A = 0x20100000, slot B = 0x20200000
+echo   sign_image.cmd ramload^|swap factory^|test^|raw IN.elf^|IN.bin VERSION OUT.bin
 exit /b 2

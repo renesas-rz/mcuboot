@@ -28,28 +28,6 @@ static void rza3m_halt(const char *why)
     }
 }
 
-/* UI bank number from the custom TLV 0xA0 (ASCII decimal), or RZA3M_UI_BANK_NONE. */
-static uint32_t parse_ui_bank(const struct image_header *hdr, const struct flash_area *fap)
-{
-    struct image_tlv_iter it;
-    uint32_t off;
-    uint16_t len;
-    uint16_t type;
-    char txt[12];
-    uint32_t v = 0U;
-
-    if (bootutil_tlv_iter_begin(&it, hdr, fap, RZA3M_TLV_UI_BANK, true) != 0) { return RZA3M_UI_BANK_NONE; }
-    if (bootutil_tlv_iter_next(&it, &off, &len, &type) != 0)                  { return RZA3M_UI_BANK_NONE; }
-    if ((len == 0U) || (len >= sizeof(txt)))                                   { return RZA3M_UI_BANK_NONE; }
-    if (flash_area_read(fap, off, txt, len) != 0)                              { return RZA3M_UI_BANK_NONE; }
-
-    for (uint16_t i = 0U; i < len; i++) {
-        if ((txt[i] < '0') || (txt[i] > '9')) { return RZA3M_UI_BANK_NONE; }
-        v = (v * 10U) + (uint32_t)(txt[i] - '0');
-    }
-    return v;
-}
-
 void rza3m_mcuboot_main(void)
 {
     struct boot_rsp rsp;
@@ -109,22 +87,11 @@ void rza3m_mcuboot_main(void)
     bi->ver_minor       = hdr->ih_ver.iv_minor;
     bi->ver_revision    = hdr->ih_ver.iv_revision;
     bi->ver_build       = hdr->ih_ver.iv_build_num;
-    bi->ui_bank_id      = RZA3M_UI_BANK_NONE;
-
-    {
-        const struct flash_area *rfa;
-        int area_id = flash_area_id_from_image_offset(rsp.br_image_off);
-
-        if ((area_id >= 0) && (flash_area_open((uint8_t)area_id, &rfa) == 0)) {
-            bi->ui_bank_id = parse_ui_bank(hdr, rfa);
-            flash_area_close(rfa);
-        }
-    }
     bi->checksum = rza3m_boot_info_sum(bi);
 
-    BOOT_LOG_INF("boot slot %c  v%u.%u.%u+%lu  ui_bank %ld  entry 0x%lx",
+    BOOT_LOG_INF("boot slot %c  v%u.%u.%u+%lu  entry 0x%lx",
                  bi->running_slot ? 'B' : 'A', bi->ver_major, bi->ver_minor, bi->ver_revision,
-                 (unsigned long)bi->ver_build, (long)(int32_t)bi->ui_bank_id, (unsigned long)entry);
+                 (unsigned long)bi->ver_build, (unsigned long)entry);
 
 #if defined(MCUBOOT_RAM_LOAD_REVERT)
     {

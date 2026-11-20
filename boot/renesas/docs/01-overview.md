@@ -35,7 +35,6 @@ The authoritative values are in [`include/rza3m_flash_layout.h`](../include/rza3
 | Image header size | `0x1000` |
 | Write alignment | 8 |
 | Erase sector | 64 KiB |
-| Custom TLV `0xA0` | UI bank number (ASCII decimal) |
 | Validation | SHA-256 (no signature by default) |
 
 ## Boot modes

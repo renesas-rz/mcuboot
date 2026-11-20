@@ -102,9 +102,3 @@ int rza3m_app_mark_pending(bool permanent)
     return boot_set_pending(permanent ? 1 : 0);
 #endif
 }
-
-uint32_t rza3m_app_inactive_ui_bank(void)
-{
-    /* RAM-load: fixed pairing A<->0, B<->1. Swap modes: use the image's TLV 0xA0 instead. */
-    return (inactive_area_id() == FLASH_AREA_IMAGE_PRIMARY(0)) ? 0U : 1U;
-}

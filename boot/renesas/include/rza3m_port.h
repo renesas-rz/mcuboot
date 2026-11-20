@@ -9,8 +9,6 @@
 /* ---- Boot-info block, written by MCUboot at RZA3M_BOOTINFO_ADDR before the jump ---- */
 #define RZA3M_BOOTINFO_MAGIC    0x4D434254UL   /* "MCBT" */
 #define RZA3M_BOOTINFO_VERSION  1U
-#define RZA3M_UI_BANK_NONE      0xFFFFFFFFUL
-#define RZA3M_TLV_UI_BANK       0x00A0         /* imgtool --custom-tlv 0xA0 <decimal> */
 
 typedef struct {
     uint32_t magic;
@@ -18,7 +16,7 @@ typedef struct {
     uint32_t mode;
     uint32_t running_slot;     /* 0 = A, 1 = B */
     uint32_t image_flash_off;
-    uint32_t ui_bank_id;
+    uint32_t reserved;          /* Keep the boot-info ABI stable; always zero. */
     uint8_t  ver_major;
     uint8_t  ver_minor;
     uint16_t ver_revision;
