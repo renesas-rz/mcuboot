@@ -22,6 +22,12 @@ else
 OPT_FLAGS := -Os -g
 endif
 
+VERIFY_KEY ?=
+ifneq ($(strip $(VERIFY_KEY)),)
+BUILD := $(BUILD)_ec256
+PYTHON ?= python
+endif
+
 PORT_SRCS := src/start.S src/rza3m_jump.S src/boot_main.c src/flash_map_backend.c \
              src/rza3m_console.c src/rza3m_string.c src/rza3m_cache.c src/rza3m_wdt.c
 # All bootutil sources except the PSA crypto backends (*_psa.c): they need
@@ -42,6 +48,14 @@ DEFS := -DRZA3M_MCUBOOT_MODE=$(MODE) -DMCUBOOT_LOG_LEVEL=$(LOG)
 ifeq ($(LAYOUT_OK),1)
 DEFS += -DRZA3M_LAYOUT_CONFIRMED
 endif
+ifneq ($(strip $(VERIFY_KEY)),)
+ASN1_DIR := $(MCUBOOT)/ext/mbedtls-asn1
+DEFS += -DMCUBOOT_SIGN_EC256
+INCS += -I$(BUILD) -I$(ASN1_DIR)/include
+PORT_SRCS += src/rza3m_verify_key.c
+TC_SRCS += $(addprefix $(MCUBOOT)/ext/tinycrypt/lib/source/,ecc.c ecc_dsa.c)
+ASN1_SRCS := $(addprefix $(ASN1_DIR)/src/,asn1parse.c platform_util.c)
+endif
 
 # -mstrict-align: runs MMU-off (DDR = Device memory, no unaligned access)
 # -mgeneral-regs-only: no FP/SIMD, independent of CPTR_EL3 state left by the IPL
@@ -51,7 +65,7 @@ CFLAGS += -mcpu=cortex-a55 -mstrict-align -mgeneral-regs-only -ffreestanding -fn
 ASFLAGS := -mcpu=cortex-a55 $(DEFS) $(INCS)
 LDFLAGS := -nostdlib -nostartfiles -static -Wl,--gc-sections -Wl,-Map=$(BUILD)/rza3m_mcuboot.map
 
-SRCS := $(PORT_SRCS) $(BOOTUTIL_SRCS) $(TC_SRCS)
+SRCS := $(PORT_SRCS) $(BOOTUTIL_SRCS) $(TC_SRCS) $(ASN1_SRCS)
 OBJS := $(patsubst %,$(BUILD)/obj/%.o,$(subst ../,,$(SRCS)))
 
 CFLAGS  += $(OPT_FLAGS) -MMD -MP
@@ -80,6 +94,18 @@ $(BUILD)/obj/%.S.o: %.S
 	@mkdir -p $(dir $@); $(CC) $(ASFLAGS) -c $< -o $@
 $(BUILD)/obj/%.c.o: ../../%.c
 	@mkdir -p $(dir $@); $(CC) $(CFLAGS) -c $< -o $@
+
+ifneq ($(strip $(VERIFY_KEY)),)
+$(BUILD)/obj/src/rza3m_verify_key.c.o: $(BUILD)/verify_key.h
+
+$(BUILD)/verify_key.h: FORCE
+	@mkdir -p $(dir $@)
+	"$(PYTHON)" "$(MCUBOOT)/scripts/imgtool.py" getpub -k "$(VERIFY_KEY)" -o "$@.tmp"
+	@mv "$@.tmp" "$@"
+
+.PHONY: FORCE
+FORCE:
+endif
 
 $(BUILD)/linker.ld: ld/rza3m_mcuboot.ld.S include/rza3m_flash_layout.h
 	@mkdir -p $(BUILD); $(CC) -E -P -x c -DLINKER_SCRIPT $(DEFS) $(INCS) $< -o $@

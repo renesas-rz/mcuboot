@@ -28,6 +28,30 @@ Environment variables:
 | `OBJCOPY` | `aarch64-none-elf-objcopy` | the input is an `.elf` and the toolchain is not on `PATH` |
 | `SIGNING_KEY` | — | MCUboot is built with signature verification |
 
+### Enable ECDSA-P256 verification
+
+The default bootloader checks SHA-256 integrity only. To verify authenticity,
+use `imgtool` to generate a development key and export its public part. Run
+from `boot/renesas` in the build shell:
+
+```sh
+python ../../scripts/imgtool.py keygen -t ecdsa-p256 -k "$PRIVATE_PEM"
+python ../../scripts/imgtool.py getpub -k "$PRIVATE_PEM" -e pem -o "$PUBLIC_PEM"
+make LAYOUT_OK=1 MODE=1 VERIFY_KEY="$PUBLIC_PEM" all
+```
+
+Set `PRIVATE_PEM` and `PUBLIC_PEM` to the desired key file paths first. Keep
+the private key outside source control and use only the public PEM for the
+bootloader build. Its S-record is in `build/mode1_ec256`; the default build
+and flash script still use `build/mode1`.
+
+Set `SIGNING_KEY` to the private PEM when using either packaging script, then
+check the signature with `python ../../scripts/imgtool.py verify -k "$PUBLIC_PEM" image.bin`.
+Before booting the verifier, provision a confirmed image signed by the trusted
+key. Back up existing images first: RAM-load+revert can erase an unsigned or
+wrong-key image in either slot if it attempts to boot it. See MCUboot's
+[signed image guide](https://docs.mcuboot.com/signed_images.html).
+
 ## 6.2 Sign the image
 
 Run from a Command Prompt after building the application:

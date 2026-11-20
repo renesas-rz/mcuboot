@@ -36,7 +36,7 @@
 #endif
 
 #define MCUBOOT_IMAGE_NUMBER            1
-/* Phase 1: SHA-256 integrity only (no MCUBOOT_SIGN_*). Phase 2: MCUBOOT_SIGN_EC256 + keys. */
+/* SHA-256 integrity by default; VERIFY_KEY enables ECDSA-P256 in the bootloader. */
 #define MCUBOOT_USE_TINYCRYPT           1
 
 #define MCUBOOT_USE_FLASH_AREA_GET_SECTORS 1
