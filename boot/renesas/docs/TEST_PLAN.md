@@ -81,8 +81,17 @@ Live page programming, trailer flag writes and actual power cuts remain untested
   20 seconds of watchdog refresh without rebooting. On the next boot the same
   image should start as confirmed, without arming the trial watchdog.
 
+### Application NOR backend confirmation check
+
+On EK-RZ/A3M, a Blinky trial built with the corrected application NOR backend
+reported `confirm rc=0`. After a power-cycle, MCUboot booted the same image
+without arming the trial watchdog, and J-Link read its `image_ok` flag as set.
+An immediate memory-mapped read before the power-cycle still showed the old
+flag value. This check covers the confirmation write, not application-driven
+inactive-slot erase or image programming.
+
 Measure per mode: MCUboot start → app banner time, swap duration for a full slot, erase cycles per
 update, MCUboot binary size and DDR footprint.
 
 Known MCUboot behaviours (document, not bugs): single trial boot (no attempt counter);
-RAM-load picks the highest version; first image in RAM-load+revert must be signed `--confirm`.
+RAM-load picks the highest version; first image in RAM-load+revert must be packaged with `--confirm`.

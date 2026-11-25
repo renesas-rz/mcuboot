@@ -52,14 +52,12 @@ static int rza3m_nor_begin(void)
 
 static int rza3m_nor_end(void)
 {
-    fsp_err_t err ;
     /*
-     * Ensure that the XIP-mode change completes before any subsequent
-     * memory-mapped NOR access.
+     * Order completed operations before subsequent memory-mapped NOR access.
      */
     __asm__ volatile ("dsb sy\nisb" ::: "memory");
 
-    return (FSP_SUCCESS == err) ? 0 : -(int) err;
+    return 0;
 }
 
 static int rza3m_nor_wait_ready(void)
