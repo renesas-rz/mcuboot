@@ -55,7 +55,7 @@ static void wdt_delay_us(uint32_t us)
     } while ((now - start) < ticks);
 }
 
-bool rza3m_wdt_is_running(void)
+static bool wdt_is_running(void)
 {
     return (REG32(WDT_WDTCNT) & WDTCNT_WDTEN) != 0U;
 }
@@ -65,7 +65,7 @@ int rza3m_wdt_start(uint32_t period_ms)
     uint32_t wdttime;
     uint32_t set;
 
-    if (rza3m_wdt_is_running()) {
+    if (wdt_is_running()) {
         return 1;                                   /* already running: cannot reconfigure */
     }
 
@@ -89,15 +89,7 @@ int rza3m_wdt_start(uint32_t period_ms)
     REG32(WDT_WDTINT) = WDTINT_INTDISP;             /* clear any stale state */
     wdt_delay_us(2U);                               /* WDTINT write interval */
     REG32(WDT_WDTCNT) = WDTCNT_WDTEN;
-    return rza3m_wdt_is_running() ? 0 : -1;
-}
-
-void rza3m_wdt_refresh(void)
-{
-    if (rza3m_wdt_is_running()) {
-        REG32(WDT_WDTINT) = WDTINT_INTDISP;         /* clears interrupt and counter */
-        wdt_delay_us(1U);                           /* 5 x P0 + 5 x OSCCLK between writes */
-    }
+    return wdt_is_running() ? 0 : -1;
 }
 
 bool rza3m_wdt_caused_last_reset(bool clear)
@@ -108,17 +100,5 @@ bool rza3m_wdt_caused_last_reset(bool clear)
         REG32(CPG_WDTOVF_RST) = WDTOVF0 | WDTOVF0_WEN;
     }
     return wdt;
-}
-
-void rza3m_wdt_reboot(void)
-{
-    __asm volatile("msr daifset, #0xf");
-    if (!rza3m_wdt_is_running()) {
-        (void)rza3m_wdt_start(0U);                  /* shortest period: reset in ~87 ms */
-    }
-    /* Running: stop refreshing; reset after at most 2 x the configured period. */
-    for (;;) {
-        __asm volatile("wfe");
-    }
 }
 
