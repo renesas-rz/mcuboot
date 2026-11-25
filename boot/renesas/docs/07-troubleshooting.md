@@ -16,7 +16,7 @@
 
 | Symptom | Fix |
 |---|---|
-| `Microsoft Visual C++ 14.0 or greater is required` | Python too new (e.g. 3.15), no prebuilt wheels. Use Python 3.12 or 3.13 and `set PYTHON=py -3.12`. |
+| `Microsoft Visual C++ 14.0 or greater is required` | A dependency may not have a prebuilt wheel for the selected Python. Use a validated Python version (3.12 or 3.13) and `set PYTHON=py -3.12`. |
 | `imgtool not found` | Set `MCUBOOT_DIR`. |
 | `objcopy failed` | Set `OBJCOPY` to the toolchain's `aarch64-none-elf-objcopy.exe`. |
 | `entry 0x... expected 0x40200000` | The application is not linked at `0x40200000`, see guide 5.2. |
@@ -26,8 +26,8 @@
 
 | Symptom | Cause / fix |
 |---|---|
-| `no bootable image` | No valid signed image in either slot. Check that the signed `.bin` was programmed at the slot address. |
+| `no bootable image` | No valid MCUboot image in either slot. Check that the packaged `.bin` was programmed at the slot address and, if signature verification is enabled, signed with the trusted key. |
 | `SCIF Download mode due to error` after a reset during NOR erase | This can occur before IPL starts. Let NOR settle, then reset again. In the [live erase reset test](TEST_PLAN.md#ram-loadrevert-live-erase-reset), a second reset after a three-second wait recovered without reflashing. |
 | New image in slot B not booted | Its version is not higher than slot A. |
 | Image boots once, then is erased | Trial image not confirmed. Check `rza3m_app_confirm()` and that `HEALTH_FORCE_FAIL` is not defined. |
-| Programming from e² studio fails or the session disconnects | Not supported. Program with J-Flash Lite and power-cycle. |
+| Programming or debugging from e² studio fails | Check the J-Link target and JTAG settings, the selected S-record and ELF, and the reset settings in [guide 4](04-flash-and-debug.md). |

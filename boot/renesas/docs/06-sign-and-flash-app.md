@@ -1,10 +1,12 @@
 # 6. Sign and program the application
 
-MCUboot only boots images with an MCUboot header and trailer. `boot/renesas/scripts/sign_image.cmd` (Windows) and `sign_image.sh` (Linux/Git Bash) do the conversion:
+MCUboot boots images in MCUboot format. `boot/renesas/scripts/sign_image.cmd` (Windows) and `sign_image.sh` (Linux/Git Bash) add the header and, for `factory` and `test`, a trailer:
 
 ```text
-Blinky_RZA3M.elf -> raw binary -> strip FSP loader header -> imgtool sign -> signed .bin
+Blinky_RZA3M.elf -> raw binary -> strip FSP loader header -> imgtool sign -> MCUboot .bin
 ```
+
+Without `SIGNING_KEY`, the output has an integrity hash but no cryptographic signature.
 
 ## 6.1 Usage
 
@@ -17,7 +19,7 @@ sign_image.cmd <ramload|swap> <factory|test|raw> <in.elf|in.bin> <version> <out.
 | mode | `ramload` (MCUboot `MODE=1`) |
 | kind | `factory` – confirmed image, use for the first image in slot A<br>`test` – trial image, must be confirmed by the application<br>`raw` – no trailer, for OTA payloads written by the application |
 | version | `1.0.0`, `1.0.1+5`, … must be higher than the running image |
-| out.bin | Signed image to program into the slot |
+| out.bin | Packaged image to program into the slot |
 
 Environment variables:
 
@@ -43,7 +45,7 @@ make LAYOUT_OK=1 MODE=1 VERIFY_KEY="$PUBLIC_PEM" all
 Set `PRIVATE_PEM` and `PUBLIC_PEM` to the desired key file paths first. Keep
 the private key outside source control and use only the public PEM for the
 bootloader build. Its S-record is in `build/release_ec256`; the default build
-and flash script still use `build/release`.
+uses `build/release`.
 
 Set `SIGNING_KEY` to the private PEM when using either packaging script, then
 check the signature with `python ../../scripts/imgtool.py verify -k "$PUBLIC_PEM" image.bin`.
@@ -76,7 +78,7 @@ Expected end of the output:
 
 ## 6.3 Program the image
 
-Program the signed `.bin` with J-Flash Lite (V9.44) at the slot address, see [guide 4](04-flash-and-debug.md):
+Program the packaged `.bin` with J-Flash Lite (V9.44) at the slot address, see [guide 4](04-flash-and-debug.md):
 
 | Image | File | Address |
 |---|---|---|

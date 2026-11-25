@@ -6,16 +6,16 @@ MCUboot is built with its own Makefile, in the same way as the RZ/A IPL. e² stu
 
 ## 3.1 Import the project
 
-Import the repository following the same procedure as for the IPL in [IPL build environment construction procedure](https://github.com/renesas/rza-initial-program-loader/blob/main/application_note/06.%20IPL%20build%20environment%20construction%20procedure.md), with these differences:
+Create an e² studio C/C++ Makefile project named `MCUboot` at the repository root, or import it if you already have local e² studio project metadata. The repository does not include `.project` or `.cproject` files. The [IPL build environment construction procedure](https://github.com/renesas/rza-initial-program-loader/blob/main/application_note/06.%20IPL%20build%20environment%20construction%20procedure.md) provides background on the build environment.
 
 | IPL guide | MCUboot |
 |---|---|
-| IPL repository folder | MCUboot repository root (`%MCUBOOT_DIR%`, the folder containing `boot/`, `scripts/`, `.project`) |
+| IPL repository folder | MCUboot repository root (`%MCUBOOT_DIR%`, the folder containing `boot/` and `scripts/`) |
 | Project name | **MCUboot** |
 | Build directory | `${workspace_loc:/MCUboot/boot/renesas}` |
 | Build configurations / make arguments | See 3.2 |
 
-Leave **Copy projects into workspace** unchecked. The project must be named `MCUboot`.
+When importing existing metadata, leave **Copy projects into workspace** unchecked. The project must be named `MCUboot`.
 
 ## 3.2 Build configurations
 
@@ -32,16 +32,15 @@ Build arguments (**Behavior** tab → *Build (Incremental build)*):
 
 | Configuration | Make arguments | Output folder |
 |---|---|---|
-| Release | `LAYOUT_OK=1 MODE=1 LOG=3 V=1 -j8 all` | `build/release/` |
-| Debug | `LAYOUT_OK=1 MODE=1 LOG=4 V=1 -j8 DEBUG=1 all` | `build/debug/` |
+| Release | `LAYOUT_OK=1 MODE=1 LOG=3 -j8 all` | `build/release/` |
+| Debug | `LAYOUT_OK=1 MODE=1 LOG=4 -j8 DEBUG=1 all` | `build/debug/` |
 
 | Variable | Meaning |
 |---|---|
 | `LAYOUT_OK=1` | Confirms that `rza3m_flash_layout.h` was reviewed for your board. The build stops without it. |
 | `MODE=1` | RAM-load with revert |
 | `LOG=` | Log level. `3` = info, `4` = debug incl. flash driver messages. |
-| `DEBUG=1` | `-O0 -g`, no inlining |
-| `V=1` | Print full compiler commands |
+| `DEBUG=1` | Disable optimization (`-O0`) and include debug symbols |
 
 ## 3.3 Build
 

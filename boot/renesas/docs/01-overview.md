@@ -4,7 +4,7 @@
 
 1. The RZ/A3M Boot ROM loads the **IPL** from QSPI NOR.
 2. The IPL initialises DDR, reads the MCUboot application header at NOR `0x20020000`, then copies the payload from NOR `0x20020200` to DDR `0x40001000` and branches to `0x40001000`.
-3. MCUboot checks both application slots, validates the selected image (SHA-256), copies it to DDR and jumps to it.
+3. MCUboot checks both application slots, validates the selected image (SHA-256 and, if enabled, ECDSA-P256), copies it to DDR and jumps to it.
 4. The application can query and confirm its boot state through the MCUboot application API.
 
 The IPL is not modified. MCUboot replaces the application in the IPL's view.

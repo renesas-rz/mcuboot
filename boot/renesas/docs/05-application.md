@@ -19,7 +19,7 @@ MCUboot copies the image so that the code starts at `0x40200000`. **The example 
 1. Open `script/rza3m_ek_nor.ld` and set the DDR execution start of the program to `0x40200000`.
 2. Rebuild. In `Debug/Blinky_RZA3M.map`, check that the first code section starts at `0x40200000`.
 
-`sign_image.cmd` checks the entry address in the FSP loader header and stops if it is not `0x40200000`.
+When an FSP loader header is present, `sign_image.cmd` checks its entry and copy addresses and stops if they are not `0x40200000`. Without that header, it warns that the entry address was not checked.
 
 ## 5.3 Add the SCIF console
 
@@ -69,7 +69,9 @@ If e² studio does not resolve `${env_var:...}` in the link dialog, click **Vari
 
 ### NOR backend: `rza3m_app_nor_fsp.c`
 
-`MCUBOOT_DIR/boot/renesas/app/rza3m_app_nor_fsp.c` is the recommended NOR backend for the application. It implements the functions the MCUboot sources call, on top of `g_spi_flash0`:
+`MCUBOOT_DIR/boot/renesas/app/rza3m_app_nor_fsp.c` is the provided FSP NOR backend for the application. It implements the functions the MCUboot sources call, on top of `g_spi_flash0`:
+
+> **Caution:** Cache coherency after application writes and erases requires further validation; see [Known limitations](08-limitations.md).
 
 ```c
 int rza3m_nor_read (uint32_t off, void *dst, uint32_t len);

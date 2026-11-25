@@ -15,7 +15,7 @@
 | Toolchain | Arm GNU Toolchain 13.2.Rel1 `aarch64-none-elf` (bundled with e² studio) |
 | MSYS2 | Provides `make` and the shell tools used by the Makefile |
 | SEGGER J-Link Software, incl. **J-Flash Lite** | **V9.44** |
-| Python | **3.12 or 3.13**, 64-bit. Python 3.15 is not supported, see [Troubleshooting](07-troubleshooting.md). |
+| Python | **3.12 or 3.13**, 64-bit |
 | Git | Any recent version |
 
 ## Build environment (MSYS2 and PATH)

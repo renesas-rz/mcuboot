@@ -1,11 +1,19 @@
-# 4. Program the board
+# 4. Program and debug the board
 
-Use **J-Flash Lite** from SEGGER J-Link Software **V9.44** to program NOR.
+Use **e² studio** with J-Link to program and debug MCUboot, or **J-Flash Lite** from SEGGER J-Link Software **V9.44** to program NOR.
 
-> **Programming from e² studio does not work for this port, and debugging is experimental.**
-> An e² studio debug session can only read registers and memory, and step through the code once. Do not use it to program the board.
+## 4.1 Program and debug with e² studio
 
-## 4.1 Program with J-Flash Lite
+1. Build the MCUboot configuration you want to debug ([guide 3](03-build-mcuboot.md)). Set the EK-RZ/A3M to NOR boot mode and connect the J-Link. If the IPL is not already programmed, program it first using section 4.2.
+2. Open **Run → Debug Configurations → Renesas GDB Hardware Debugging** and create a configuration for project `MCUboot`.
+3. On **Main**, select the corresponding MCUboot ELF: `boot/renesas/build/debug/rza3m_mcuboot.elf` for Debug or `boot/renesas/build/release/rza3m_mcuboot.elf` for Release.
+4. On **Debugger → Debug hardware**, select J-Link ARM, target `R9A07G066M04GBG`, board **EK-RZ/A3M NOR Boot (Exec with DDR SDRAM)** and interface **JTAG**. Enable **Reset at the end of connection** and **Reset after download**.
+5. On **Startup**, configure *Load image and symbols* to download the matching MCUboot S-record (`boot/renesas/build/debug/rza3m_mcuboot.srec` or `boot/renesas/build/release/rza3m_mcuboot.srec`) and load symbols from the matching ELF. The S-record contains the NOR address; do not download the ELF as a separate NOR image.
+6. Launch the configuration and check that the download completes successfully. Use breakpoints, stepping and the memory/register views to debug. The IPL and an application image must also be programmed for the normal boot flow.
+
+To check the normal boot chain independently of the debugger, power-cycle the board after programming. A debugger reset and a cold power-cycle need not exercise the same boot path.
+
+## 4.2 Program with J-Flash Lite
 
 1. Set the EK-RZ/A3M to NOR boot mode and connect the J-Link.
 2. Start **J-Flash Lite** (V9.44).
@@ -16,8 +24,8 @@ Use **J-Flash Lite** from SEGGER J-Link Software **V9.44** to program NOR.
 |---|---|---|
 | 1 | `rza3m_ek_nor_ipl.srec` (IPL) | in file (`0x20000000`) |
 | 2 | `boot/renesas/build/release/rza3m_mcuboot.srec` | in file (`0x20020000`) |
-| 3 | Signed application for slot A, e.g. `Blinky_A.bin` | `0x20100000` |
-| 4 | Signed application for slot B (optional) | `0x20200000` |
+| 3 | Packaged application for slot A, e.g. `Blinky_A.bin` | `0x20100000` |
+| 4 | Packaged application for slot B (optional) | `0x20200000` |
 
 Signing the application is described in [guide 6](06-sign-and-flash-app.md). Before programming a slot, erase the whole slot (1 MiB), including its last 64 KiB sector that holds the trailer.
 
@@ -30,33 +38,3 @@ Signing the application is described in [guide 6](06-sign-and-flash-app.md). Bef
 ```
 
 With no application programmed, MCUboot reports `no bootable image` and halts.
-
-## 4.2 Experimental debug session
-
-This launch configuration only attaches to the target. It does not download or program anything.
-
-1. **Run → Debug Configurations → Renesas GDB Hardware Debugging → New**, name `RZA3M_MCUboot_release`.
-2. **Main:** project `MCUboot`, application `boot/renesas/build/release/rza3m_mcuboot.elf`, build before launching disabled.
-3. **Debugger → Debug hardware:** J-Link ARM, target `R9A07G066M04GBG`, board **EK-RZA3M NOR Boot**, JTAG, reset at connection **No**, reset after download **No**.
-4. **Startup:** in *Load image and symbols*, keep only the MCUboot ELF with **Symbols only**. Uncheck **Set breakpoint at** and **Resume**.
-5. **Initialization commands:**
-
-```gdb
-set breakpoint enable-memread 0
-set breakpoint always-inserted off
-delete breakpoints
-```
-
-Program the board with J-Flash Lite and power-cycle it first, then start the session. Example, reading the slot A trailer:
-
-```gdb
-x/8wx 0x201FFFE0
-```
-
-What works and what does not:
-
-| Works | Does not work |
-|---|---|
-| Reading registers and memory | Programming NOR |
-| Stepping through the code once | Resuming after a step (the session can disconnect) |
-| | Debugging from reset (the debugger reset skips the Boot ROM → IPL → MCUboot sequence) |
