@@ -42,8 +42,8 @@ make LAYOUT_OK=1 MODE=1 VERIFY_KEY="$PUBLIC_PEM" all
 
 Set `PRIVATE_PEM` and `PUBLIC_PEM` to the desired key file paths first. Keep
 the private key outside source control and use only the public PEM for the
-bootloader build. Its S-record is in `build/mode1_ec256`; the default build
-and flash script still use `build/mode1`.
+bootloader build. Its S-record is in `build/release_ec256`; the default build
+and flash script still use `build/release`.
 
 Set `SIGNING_KEY` to the private PEM when using either packaging script, then
 check the signature with `python ../../scripts/imgtool.py verify -k "$PUBLIC_PEM" image.bin`.

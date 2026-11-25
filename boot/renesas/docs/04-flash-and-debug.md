@@ -15,7 +15,7 @@ Use **J-Flash Lite** from SEGGER J-Link Software **V9.44** to program NOR.
 | # | File | Address |
 |---|---|---|
 | 1 | `rza3m_ek_nor_ipl.srec` (IPL) | in file (`0x20000000`) |
-| 2 | `boot/renesas/build/mode1/rza3m_mcuboot.srec` | in file (`0x20020000`) |
+| 2 | `boot/renesas/build/release/rza3m_mcuboot.srec` | in file (`0x20020000`) |
 | 3 | Signed application for slot A, e.g. `Blinky_A.bin` | `0x20100000` |
 | 4 | Signed application for slot B (optional) | `0x20200000` |
 
@@ -36,7 +36,7 @@ With no application programmed, MCUboot reports `no bootable image` and halts.
 This launch configuration only attaches to the target. It does not download or program anything.
 
 1. **Run → Debug Configurations → Renesas GDB Hardware Debugging → New**, name `RZA3M_MCUboot_release`.
-2. **Main:** project `MCUboot`, application `boot/renesas/build/mode1/rza3m_mcuboot.elf`, build before launching disabled.
+2. **Main:** project `MCUboot`, application `boot/renesas/build/release/rza3m_mcuboot.elf`, build before launching disabled.
 3. **Debugger → Debug hardware:** J-Link ARM, target `R9A07G066M04GBG`, board **EK-RZA3M NOR Boot**, JTAG, reset at connection **No**, reset after download **No**.
 4. **Startup:** in *Load image and symbols*, keep only the MCUboot ELF with **Symbols only**. Uncheck **Set breakpoint at** and **Resume**.
 5. **Initialization commands:**

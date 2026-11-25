@@ -1,5 +1,5 @@
 # RZ/A3M MCUboot - standalone bare-metal build (no FSP). Place at <mcuboot>/boot/rza3m/.
-#   make LAYOUT_OK=1 MODE=1            -> build/mode1/rza3m_mcuboot.bin
+#   make LAYOUT_OK=1 MODE=1 all        -> build/release/rza3m_mcuboot.bin
 #   make LAYOUT_OK=1 MODE=1 LOG=4      (debug logging, incl. IPL driver INFO)
 # Use the same aarch64 bare-metal GCC you use to build the IPL.
 
@@ -11,13 +11,21 @@ SIZE    := $(CROSS_COMPILE)size
 MODE    ?= 1
 LOG     ?= 3
 MCUBOOT := ../..
+ifeq ($(MODE),1)
+BUILD   := build/release
+else
 BUILD   := build/mode$(MODE)
+endif
 
 # ---- Debug / release selection (appended last so it wins) ----
 DEBUG ?= 0
 ifeq ($(DEBUG),1)
 OPT_FLAGS := -O0 -g3 -ggdb -fno-omit-frame-pointer -fno-optimize-sibling-calls
+ifeq ($(MODE),1)
+BUILD     := build/debug
+else
 BUILD     := $(BUILD)_dbg
+endif
 else
 OPT_FLAGS := -Os -g
 endif

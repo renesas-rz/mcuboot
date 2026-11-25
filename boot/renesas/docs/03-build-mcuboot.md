@@ -32,8 +32,8 @@ Build arguments (**Behavior** tab → *Build (Incremental build)*):
 
 | Configuration | Make arguments | Output folder |
 |---|---|---|
-| Release | `LAYOUT_OK=1 MODE=1 LOG=3 V=1 -j8` | `build/mode1/` |
-| Debug | `LAYOUT_OK=1 MODE=1 LOG=4 V=1 -j8 DEBUG=1` | `build/mode1_dbg/` |
+| Release | `LAYOUT_OK=1 MODE=1 LOG=3 V=1 -j8 all` | `build/release/` |
+| Debug | `LAYOUT_OK=1 MODE=1 LOG=4 V=1 -j8 DEBUG=1 all` | `build/debug/` |
 
 | Variable | Meaning |
 |---|---|
@@ -48,7 +48,7 @@ Build arguments (**Behavior** tab → *Build (Incremental build)*):
 1. **Project → Build Configurations → Set Active → Release**.
 2. **Project → Clean**, then **Project → Build Project**.
 
-The console ends with the size summary of `build/mode1/rza3m_mcuboot.elf`.
+The console ends with the size summary of `build/release/rza3m_mcuboot.elf`.
 
 ## 3.4 Output files
 
