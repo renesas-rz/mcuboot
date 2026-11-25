@@ -56,5 +56,5 @@ The console ends with the size summary of `build/mode1/rza3m_mcuboot.elf`.
 |---|---|
 | `rza3m_mcuboot.srec` | Program into NOR at `0x20020000` |
 | `rza3m_mcuboot.elf` | Symbols |
-| `rza3m_mcuboot.bin` | Raw runtime image (DDR `0x40000000`) |
+| `rza3m_mcuboot.bin` | Raw NOR image: IPL application header followed by the payload linked at DDR `0x40001000` |
 | `rza3m_mcuboot.map` | Link map |
