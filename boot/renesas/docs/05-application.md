@@ -49,6 +49,22 @@ Needed for `rza3m_app_confirm()` and image updates from the application.
 3. **BSP** tab → set **Heap size** to a non-zero value. `R_SPIBSC_Open()` uses `malloc()`.
 4. **Generate Project Content**.
 
+### Watchdog stack (if used by the application)
+
+To start a watchdog from the application, add a **Watchdog Timer (r_wdt)**
+stack in `configuration.xml` → **Stacks → New Stack**. Name the instance
+`g_wdt0`, configure its timeout and interrupt/callback settings for the
+application, then select **Generate Project Content**. The generated
+`g_wdt0_ctrl` and `g_wdt0_cfg` are used with `R_WDT_Open()` and
+`R_WDT_Refresh()`. If using it to reset the board, configure the WDT0 system
+reset route as well; the Blinky reference sets `CPG_WDTRST_SEL.WDTRSTSEL0`.
+
+MCUboot starts its trial watchdog independently of this FSP stack. When the
+application inherits a running WDT0, its timeout is already configured and
+cannot be changed until reset. Do not open it again with FSP; preserve its
+clocks and follow the trial handoff in section 5.6. The Blinky reference
+refreshes the inherited watchdog through the WDT0 register after confirmation.
+
 ## 5.5 Add the MCUboot files
 
 The application links the MCUboot files from the repository instead of copying them, so it always uses the same layout and trailer format as MCUboot. All paths use the `MCUBOOT_DIR` environment variable defined in [guide 2](02-prerequisites.md).
