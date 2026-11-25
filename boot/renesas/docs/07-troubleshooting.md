@@ -27,6 +27,7 @@
 | Symptom | Cause / fix |
 |---|---|
 | `no bootable image` | No valid signed image in either slot. Check that the signed `.bin` was programmed at the slot address. |
+| `SCIF Download mode due to error` after a reset during NOR erase | This can occur before IPL starts. Let NOR settle, then reset again. In the [live erase reset test](TEST_PLAN.md#ram-loadrevert-live-erase-reset), a second reset after a three-second wait recovered without reflashing. |
 | New image in slot B not booted | Its version is not higher than slot A. |
 | Image boots once, then is erased | Trial image not confirmed. Check `rza3m_app_confirm()` and that `HEALTH_FORCE_FAIL` is not defined. |
 | Programming from e² studio fails or the session disconnects | Not supported. Program with J-Flash Lite and power-cycle. |
